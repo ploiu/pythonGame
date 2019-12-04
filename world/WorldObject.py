@@ -5,7 +5,7 @@ class WorldObject:
         The base class for any object that exists in the world
         All objects have an X and Y coordinate, as well as a color, width, and height
     """
-    def __init__(self, posX, posY, width, height, color):
+    def __init__(self, posX, posY, width, height, color, worldWidth = 500, worldHeight = 500):
         self.posX = posX
         self.posY = posY
         self.width = width
@@ -13,6 +13,8 @@ class WorldObject:
         self.color = color
         # this object's hitbox that can be used for interaction purposes
         self.hitbox = pygame.Rect(posX, posY, width, height)
+        self._worldWidth = worldWidth
+        self._worldHeight = worldHeight
         
     def set_location(self, x = None, y = None):
         """Updates the location of this object, using the passed-in x and y values"""
@@ -93,8 +95,28 @@ class Entity(WorldObject):
         newX = self.posX + self.velX
         # the new y location this entity should be at
         newY = self.posY + self.velY
+        # clamp the locations in
+        finalLocations = self.__clampLocationWithinWorldBounds(newX, newY)
+        newX = finalLocations[0]
+        newY = finalLocations[1]
         # update this entity's location and hitbox
         self.set_location(newX, newY)
+        
+    def __clampLocationWithinWorldBounds(self, newX, newY):
+        """ensures that the passed newX and newY are within this entity's world limits. If they go outside the bounds, they are clamped within them"""
+        # the real x and y positions to use
+        finalX, finalY = newX, newY
+        if newX <= 0:
+            finalX = 0
+        elif newX + self.width >= self._worldWidth:
+            finalY = self._worldWidth - self.width
+        # for the y axis
+        if newY <= 0:
+            finalY = 0
+        elif newY + self.height >= self._worldHeight:
+            finalY = self._worldHeight - self.height    
+        
+        return finalX, finalY
         
     def update(self):
         """updates all necessary values of this entity, called within the game loop"""
@@ -103,5 +125,8 @@ class Entity(WorldObject):
         
 class Player(Entity):
     """A Player is a type of entity that can be controlled with a controller"""
-    def __init__(self, color, posX = 0, posY = 0):
-        Entity.__init__(self, posX, posY, 10, 10, color, 5, 5)
+    def __init__(self, playerNumber = 0, posX = 0, posY = 0):
+        # the array of colors to use that corresponds to the player number
+        playerColors = [(255, 0, 50), (50, 0, 255)]
+        self.playerNumber = playerNumber
+        Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 5)

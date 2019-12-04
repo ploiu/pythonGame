@@ -21,6 +21,7 @@ class Game:
         # add the gamepads to our components
         self.components['gamepads'] = gamepads
         
+        
     def __init(self):
         """initializes the graphical component of the game as well as the game world"""
         self.screen = pygame.display.set_mode((500, 500), pygame.DOUBLEBUF)
@@ -46,18 +47,15 @@ class Game:
         # check that everything initialized properly
         try:
             self.__post_init()
-            print("game started")
+            print("game started") 
         except AssertionError as error:
             print("game failed to start, error: \n")
             traceback.print_exc()
             # stop pygame and close python
             self.__quit_game()
             
-        # DEBUG add a test object to the world
-        testObject = world.WorldObject(250, 250, 10, 10, (255, 0, 0))
-        self.world.add_object(testObject)
-        # DEBUG add a test entity to the world that constantly moves
-        self.__addPlayerToGame(self.components['gamepads'][0])
+        # add the players
+        self.players = self.__addPlayersForEachGamePad(self.components['gamepads'])
         # start the game's main loop
         self.__start_gameLoop()
             
@@ -69,7 +67,7 @@ class Game:
     def __start_gameLoop(self):
         """starts the loop that calls all the game's functions"""
         # the target fps count we want is related to how many times we update the display in a second
-        loopRate = 1 / 30
+        loopRate = 1 / 32
         # the variable that controls if the loop should keep going
         isRunning = True
         while isRunning:
@@ -119,9 +117,15 @@ class Game:
         
     def __addPlayerToGame(self, gamepad):
         """creates a player and binds the button inputs of the gamepad to actions the player can take"""
-        player = self.world.create_player((0, 128, 255))
+        # the player number, used to determine where to place the player
+        playerNumber = gamepad.get_controllerNumber()
+        player = self.world.create_player(playerNumber, posX = (20 if playerNumber == 0 else 480), posY = 200)
         # map the directional buttons to move the player
         gamepad.map_directionalButton(controllers.SNESAxes.VERTICAL, lambda: player.set_velocity(player.velX, player.get_speed()['y']), lambda: player.set_velocity(player.velX, -player.get_speed()['y']), lambda: player.set_velocity(player.velX, 0))
-        gamepad.map_directionalButton(controllers.SNESAxes.HORIZONTAL, lambda: player.set_velocity(player.get_speed()['x'], player.velY), lambda: player.set_velocity(-player.get_speed()['x'], player.velY), lambda: player.set_velocity(0, player.velY))
         gamepad.map_button(controllers.SNESButtons.A, pressCommand = lambda: print('A pressed'))
+        return player
         
+    def __addPlayersForEachGamePad(self, gamepads):
+        # the list of players
+        players = [self.__addPlayerToGame(gamepad) for gamepad in gamepads]
+        return players

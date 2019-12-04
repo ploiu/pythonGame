@@ -26,9 +26,9 @@ class World:
         """call our renderer to render all objects and entities in the world"""
         self.__renderer.renderWorldObjects(self.get_allObjects())
         
-    def create_player(self, color, posX = 0, posY = 0):
+    def create_player(self, playerNumber, posX = 0, posY = 0):
         """creates a player, registers it to the world, and returns it"""
-        player =  world.Player(color, posX, posY)
+        player =  world.Player(playerNumber, posX, posY)
         # register the player
         self.add_entity(player)
         return player
