@@ -57,8 +57,12 @@ class Game:
         # add the players
         self.players = self.__addPlayersForEachGamePad(self.components['gamepads'])
         # add the ball
-        self.world.add_entity(world.Ball(self.players))
-        # start the game's main loop
+        self.world.add_entity(world.Ball(self.players, game = self))
+        # render everything for a first tick
+        self.world.tick()
+        self.world.render()
+        # start the game's main loop after 3 seconds
+        time.sleep(3)
         self.__start_gameLoop()
             
     def __quit_game(self):
@@ -131,3 +135,24 @@ class Game:
         # the list of players
         players = [self.__addPlayerToGame(gamepad) for gamepad in gamepads]
         return players
+    
+    def score(self, ball):
+        """
+            changes the score of the player that scored, based on the ball's owner
+        """
+        # if the ball was <= 0, then the score being changed is player 2's else it's player 1's
+        affectedPlayer = self.players[1] if ball.posX <= 0 else self.players[0]
+        # if the score was an own goal
+        isOwnGoal = (ball.owner == affectedPlayer)
+        # if the one scored against owned the ball, then they lose a point, else the other player gains a point
+        if isOwnGoal:
+            ball.owner.score -= 1
+            affectedPlayer.score += 1
+            print("player {:n}'s score: {:n}".format(affectedPlayer.playerNumber, ball.owner.score))
+        else:
+            affectedPlayer.score += 1
+            print("player {:n}'s score: {:n}".format(affectedPlayer.playerNumber, affectedPlayer.score))
+        # reset the ball's position
+        ball.set_location(250, 250)
+        ball.switch_owner(None)
+        ball.launch()

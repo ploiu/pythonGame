@@ -1,4 +1,4 @@
-import pygame
+import pygame, random, math, time
 
 class WorldObject:
     """
@@ -142,9 +142,11 @@ class Player(Entity):
         playerColors = [(255, 0, 50), (50, 0, 255)]
         self.playerNumber = playerNumber
         Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 5)
+        # the player's score
+        self.score = 0
         
 class Ball(Entity):
-    def __init__(self, players):
+    def __init__(self, players, game):
         Entity.__init__(self, 250, 250, 10, 10, (255, 255, 255), 3, 3)
         # currenly no owner
         self.owner = 'none'
@@ -152,6 +154,7 @@ class Ball(Entity):
         self.velY = 3
         # the list of players this ball has to use in order to bounce off of them
         self.__players = players
+        self.game = game
         
     def switch_owner(self, player = None):
         # set the color of the ball
@@ -166,7 +169,8 @@ class Ball(Entity):
         # clamp the locations in
         axesOutsideWorld = self.is_outsideWorld(newX, newY)
         if axesOutsideWorld['x']:
-            self.__bounce('x')
+            # check if it's behind its owner, if yes, then decrement the owner's score for an own-goal. if not, increment it for scoring a goal
+            self.game.score(self)
         if axesOutsideWorld['y']:
             self.__bounce(axis = 'y')
         
@@ -176,7 +180,15 @@ class Ball(Entity):
                 # change the owner and bounce the ball on both axes
                 self.switch_owner(player)
                 self.__bounce('x')
-                self.__bounce('y')
+                # the amount to increase the ball's speed by
+                speedIncrease = random.randint(1, 2)
+                # if the player's y velocity was not 0, then change this ball's y velocity to match the player's
+                if player.velY != 0:
+                    self.velY = math.copysign(self.velY, player.velY)
+                    self.velY += math.copysign(speedIncrease, self.velY)
+                else:
+                    # make the ball faster on the x axis
+                    self.velX += math.copysign(speedIncrease, self.velX)
             
         Entity._update_location(self)
         
@@ -191,3 +203,25 @@ class Ball(Entity):
             self.set_velocity((-self.velX) * speedMult, self.velY)
         else:
             self.set_velocity(self.velX, (-self.velY) * speedMult)
+    
+    def launch(self):
+        """chooses a random velocity for the x and y axes to launch the ball at"""
+        # the minimum speed for the ball
+        minSpeed = 3
+        # get a random speed for the ball's x and y axes
+        spdX = random.randint(-5, 5)
+        spdY = random.randint(-4, 4)
+        # make sure spdX and spdY aren't really slow or 0
+        if spdX < 0:
+            spdX = min(spdX, -minSpeed)
+        else:
+            spdX = max(spdX, minSpeed)
+            
+        if spdY < 0:
+            spdY = min(spdY, -minSpeed)
+        else:
+            spdY = max(spdY, minSpeed)
+        # pause for a moment to let the player's get their thoughts in order
+        time.sleep(1)
+        # set our velocities to spdX and spdY
+        self.velX, velY = spdX, spdY
