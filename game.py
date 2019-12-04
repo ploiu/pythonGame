@@ -17,7 +17,7 @@ class Game:
         # initialize the components
         self.components = {}
         # for each joystick, create a controller from it and add it to our components
-        gamepads = [controllers.SNESController(joystickNumber) for joystickNumber in range(pygame.joystick.get_count())]
+        gamepads = [controllers.Controller(joystickNumber) for joystickNumber in range(pygame.joystick.get_count())]
         # add the gamepads to our components
         self.components['gamepads'] = gamepads
         
@@ -123,4 +123,5 @@ class Game:
         # map the directional buttons to move the player
         gamepad.map_directionalButton(controllers.SNESAxes.VERTICAL, lambda: player.set_velocity(player.velX, player.get_speed()['y']), lambda: player.set_velocity(player.velX, -player.get_speed()['y']), lambda: player.set_velocity(player.velX, 0))
         gamepad.map_directionalButton(controllers.SNESAxes.HORIZONTAL, lambda: player.set_velocity(player.get_speed()['x'], player.velY), lambda: player.set_velocity(-player.get_speed()['x'], player.velY), lambda: player.set_velocity(0, player.velY))
+        gamepad.map_button(controllers.SNESButtons.A, pressCommand = lambda: print('A pressed'))
         
