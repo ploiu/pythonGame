@@ -24,6 +24,10 @@ class Game:
         
     def __init(self):
         """initializes the graphical component of the game as well as the game world"""
+        # initialize the font for the screen stuff
+        pygame.font.init()
+        self.gameFont = pygame.font.SysFont('Droid Mono', 30)
+        # initialize the screen that everything displays on
         self.screen = pygame.display.set_mode((500, 500), pygame.DOUBLEBUF)
         # fill the screen with black
         self.screen.fill((0, 0, 0))
@@ -84,6 +88,7 @@ class Game:
             # clear the screen to prepare for the next draw
             self.screen.fill((0, 0, 0))
             self.world.render()
+            self.renderScores()
             # update the display
             pygame.display.flip()
             # sleep for a period of time determined by our loop rate
@@ -125,10 +130,9 @@ class Game:
         """creates a player and binds the button inputs of the gamepad to actions the player can take"""
         # the player number, used to determine where to place the player
         playerNumber = gamepad.get_controllerNumber()
-        player = self.world.create_player(playerNumber, posX = (20 if playerNumber == 0 else 480), posY = 200)
+        player = self.world.create_player(playerNumber, posX = (20 if playerNumber == 0 else 470), posY = 200)
         # map the directional buttons to move the player
         gamepad.map_directionalButton(controllers.SNESAxes.VERTICAL, lambda: player.set_velocity(player.velX, player.get_speed()['y']), lambda: player.set_velocity(player.velX, -player.get_speed()['y']), lambda: player.set_velocity(player.velX, 0))
-        gamepad.map_button(controllers.SNESButtons.A, pressCommand = lambda: print('A pressed'))
         return player
         
     def __addPlayersForEachGamePad(self, gamepads):
@@ -141,18 +145,22 @@ class Game:
             changes the score of the player that scored, based on the ball's owner
         """
         # if the ball was <= 0, then the score being changed is player 2's else it's player 1's
-        affectedPlayer = self.players[1] if ball.posX <= 0 else self.players[0]
+        affectedPlayer = self.players[1] if ball.posX <= 10 else self.players[0]
         # if the score was an own goal
         isOwnGoal = (ball.owner == affectedPlayer)
         # if the one scored against owned the ball, then they lose a point, else the other player gains a point
         if isOwnGoal:
             ball.owner.score -= 1
             affectedPlayer.score += 1
-            print("player {:n}'s score: {:n}".format(affectedPlayer.playerNumber, ball.owner.score))
         else:
             affectedPlayer.score += 1
-            print("player {:n}'s score: {:n}".format(affectedPlayer.playerNumber, affectedPlayer.score))
+        
         # reset the ball's position
         ball.set_location(250, 250)
         ball.switch_owner(None)
         ball.launch()
+        
+    def renderScores(self):
+        """renders the scores of each player on the screen"""
+        player1ScoreSurface = self.gameFont.render("{} | {}".format(self.players[0].score, self.players[1].score), False, (255, 255, 255))
+        self.screen.blit(player1ScoreSurface, (220, 30))
