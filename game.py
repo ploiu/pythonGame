@@ -56,6 +56,8 @@ class Game:
             
         # add the players
         self.players = self.__addPlayersForEachGamePad(self.components['gamepads'])
+        # add the ball
+        self.world.add_entity(world.Ball(self.players))
         # start the game's main loop
         self.__start_gameLoop()
             

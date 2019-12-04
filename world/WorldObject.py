@@ -32,10 +32,12 @@ class WorldObject:
     
     def __updateHitBox(self):
         """updates the location and size of this object's hitbox"""
-        # delete our current hitbox
-        del self.hitbox
-        # re-init our hitbox
-        self.hitbox = pygame.Rect(self.posX, self.posY, self.width, self.height)
+        # move our hitbox
+        self.hitbox.left = self.posX
+        self.hitbox.top = self.posY
+        # reset our hitbox's size
+        self.hitbox.width = self.width
+        self.hitbox.height = self.height
        
     def get_hitBox(self):
         return self.hitbox
@@ -89,27 +91,29 @@ class Entity(WorldObject):
         """gets the current velocity for this entity as a dict containing the x and y velocities. These values are the 'true' speed of the entity currently"""
         return {'x': self.velX, 'y': self.velY}
     
-    def __update_location(self):
+    def _update_location(self):
         """updates the location of this entity based on its current location and velocity, and also updates this entity's hitbox"""
         # the new x location this entity should be at
         newX = self.posX + self.velX
         # the new y location this entity should be at
         newY = self.posY + self.velY
         # clamp the locations in
-        finalLocations = self.__clampLocationWithinWorldBounds(newX, newY)
-        newX = finalLocations[0]
-        newY = finalLocations[1]
+        axesOutsideWorld = self.is_outsideWorld(newX, newY)
+        if axesOutsideWorld['x'] or axesOutsideWorld['y']:
+            finalLocations = self._clampLocationWithinWorldBounds(newX, newY)
+            newX = finalLocations[0]
+            newY = finalLocations[1]
         # update this entity's location and hitbox
         self.set_location(newX, newY)
         
-    def __clampLocationWithinWorldBounds(self, newX, newY):
+    def _clampLocationWithinWorldBounds(self, newX, newY):
         """ensures that the passed newX and newY are within this entity's world limits. If they go outside the bounds, they are clamped within them"""
         # the real x and y positions to use
         finalX, finalY = newX, newY
         if newX <= 0:
             finalX = 0
         elif newX + self.width >= self._worldWidth:
-            finalY = self._worldWidth - self.width
+            finalX = self._worldWidth - self.width
         # for the y axis
         if newY <= 0:
             finalY = 0
@@ -118,10 +122,18 @@ class Entity(WorldObject):
         
         return finalX, finalY
         
+    def is_outsideWorld(self, newX, newY):
+        """checks if either the newX or newY are outside the coordinates of the viewable world"""
+        # a dict of which axes are outside
+        axes = {}
+        axes['x'] = True if newX <= 0 or (newX + self.width >= self._worldWidth) else False
+        axes['y'] = True if newY <= 0 or (newY + self.height >= self._worldHeight) else False
+        return axes
+        
     def update(self):
         """updates all necessary values of this entity, called within the game loop"""
         # update the entity's location
-        self.__update_location()
+        self._update_location()
         
 class Player(Entity):
     """A Player is a type of entity that can be controlled with a controller"""
@@ -130,3 +142,52 @@ class Player(Entity):
         playerColors = [(255, 0, 50), (50, 0, 255)]
         self.playerNumber = playerNumber
         Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 5)
+        
+class Ball(Entity):
+    def __init__(self, players):
+        Entity.__init__(self, 250, 250, 10, 10, (255, 255, 255), 3, 3)
+        # currenly no owner
+        self.owner = 'none'
+        self.velX = 3
+        self.velY = 3
+        # the list of players this ball has to use in order to bounce off of them
+        self.__players = players
+        
+    def switch_owner(self, player = None):
+        # set the color of the ball
+        self.color = (255, 255, 255) if player is None else player.color
+        self.owner = 'none' if player is None else player.playerNumber
+
+    def _update_location(self):
+        # the new x location this entity should be at
+        newX = self.posX + self.velX
+        # the new y location this entity should be at
+        newY = self.posY + self.velY
+        # clamp the locations in
+        axesOutsideWorld = self.is_outsideWorld(newX, newY)
+        if axesOutsideWorld['x']:
+            self.__bounce('x')
+        if axesOutsideWorld['y']:
+            self.__bounce(axis = 'y')
+        
+        # for each player, if this ball intersects with it, bounce the ball and change its owner
+        for player in self.__players:
+            if self.hitbox.colliderect(player.hitbox):
+                # change the owner and bounce the ball on both axes
+                self.switch_owner(player)
+                self.__bounce('x')
+                self.__bounce('y')
+            
+        Entity._update_location(self)
+        
+    def update(self):
+        """updates all necessary values of this entity, called within the game loop"""
+        # update the entity's location
+        self._update_location()
+        
+    def __bounce(self, axis = 'x', speedMult = 1.0):
+        """changes the velocity of the ball based on the passed axis"""
+        if axis == 'x':
+            self.set_velocity((-self.velX) * speedMult, self.velY)
+        else:
+            self.set_velocity(self.velX, (-self.velY) * speedMult)
