@@ -1,4 +1,4 @@
-import pygame, world, controllers, traceback, time, events, render, componentManager, scoreManager
+import pygame, world, controllers, traceback, time, core
 
 class Game:
     """the base class for the game, handles the initialization and main loop of the game"""
@@ -19,20 +19,20 @@ class Game:
         # start pygame up
         pygame.init()
         # init our component manager and setup the controllers with it
-        self._componentManager = componentManager.ComponentManager()
+        self._componentManager = core.ComponentManager()
         self._componentManager.register_controllers(pygame.joystick.get_count())
         
     def __init(self):
         """initializes the graphical component of the game as well as the game world"""
         # initialize the handler for rendering everything
-        self._renderManager = render.RenderManager()
+        self._renderManager = core.RenderManager()
         # initialize the world for the game
         self.world = world.World()
         # initialize the players and the ball
         self.__initPlayersAndBall()
         # init our event handler with the score handler and stuff
         controllers = self._componentManager.get_controllers()
-        self._eventHandler = events.EventHandler(controllers, scoreManager.ScoreManager(self.world.get_players()))
+        self._eventHandler = core.EventHandler(controllers, core.ScoreManager(self.world.get_players()))
         
     def __post_init(self):
         """performs any post-initialization tasks, such as checking to make sure all components are loaded properly. must be called after __init"""
@@ -58,12 +58,11 @@ class Game:
             # stop pygame and close python
             self.__quit_game()
             
-        # launch the ball
-        self.world.get_ball().launch()
         # render everything for a first tick
         self.world.tick()
-        # start the game's main loop after 3 seconds
-        time.sleep(3)
+        self._renderManager.render(self.world.get_allObjects(), self.world.get_playerScores())
+        # launch the ball
+        self.world.get_ball().launch()
         self.__start_gameLoop()
             
     def __quit_game(self):
