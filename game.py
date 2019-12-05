@@ -1,46 +1,46 @@
-import pygame, world, controllers, traceback, time
+import pygame, world, controllers, traceback, time, events, render, componentManager, scoreManager
 
 class Game:
     """the base class for the game, handles the initialization and main loop of the game"""
     def __init__(self):
         # set the components to be nothing for now (will be a dict containing our components for the game)
         self.components = None
-        # define the screen as nothing for now
-        self.screen = None
         # world for this game that manages all of our world objects
         self.world = None
+        # our event handler
+        self._eventHandler = None
+        # our render manager
+        self._renderManager = None
+        # our component manager
+        self._componentManager = None
         
     def __pre_init(self):
         """initializes all non-graphical components of the game, including gamepads and pygame itself. Must be called before init"""
         # start pygame up
         pygame.init()
-        # initialize the components
-        self.components = {}
-        # for each joystick, create a controller from it and add it to our components
-        gamepads = [controllers.Controller(joystickNumber) for joystickNumber in range(pygame.joystick.get_count())]
-        # add the gamepads to our components
-        self.components['gamepads'] = gamepads
-        
+        # init our component manager and setup the controllers with it
+        self._componentManager = componentManager.ComponentManager()
+        self._componentManager.register_controllers(pygame.joystick.get_count())
         
     def __init(self):
         """initializes the graphical component of the game as well as the game world"""
-        # initialize the font for the screen stuff
-        pygame.font.init()
-        self.gameFont = pygame.font.SysFont('Droid Mono', 30)
-        # initialize the screen that everything displays on
-        self.screen = pygame.display.set_mode((500, 500), pygame.DOUBLEBUF)
-        # fill the screen with black
-        self.screen.fill((0, 0, 0))
+        # initialize the handler for rendering everything
+        self._renderManager = render.RenderManager()
         # initialize the world for the game
-        self.world = world.World(self.screen)
+        self.world = world.World()
+        # initialize the players and the ball
+        self.__initPlayersAndBall()
+        # init our event handler with the score handler and stuff
+        controllers = self._componentManager.get_controllers()
+        self._eventHandler = events.EventHandler(controllers, scoreManager.ScoreManager(self.world.get_players()))
         
     def __post_init(self):
         """performs any post-initialization tasks, such as checking to make sure all components are loaded properly. must be called after __init"""
-        # assert that our components and screen are loaded
-        assert (self.components is not None), 'components failed to load'
-        assert (self.screen is not None), 'screen failed to load'
         # assert that the game world loaded properly
         assert (self.world is not None), 'game world failed to initialize'
+        assert (self._eventHandler is not None), 'event handler failed to initialize'
+        assert (self._renderManager is not None), 'render manager failed to initialize'
+        assert (self._componentManager is not None), 'component manager failed to initialize'
         
     def start_game(self):
         """runs the initialization methods and starts the game loop"""
@@ -58,13 +58,10 @@ class Game:
             # stop pygame and close python
             self.__quit_game()
             
-        # add the players
-        self.players = self.__addPlayersForEachGamePad(self.components['gamepads'])
-        # add the ball
-        self.world.add_entity(world.Ball(self.players, game = self))
+        # launch the ball
+        self.world.get_ball().launch()
         # render everything for a first tick
         self.world.tick()
-        self.world.render()
         # start the game's main loop after 3 seconds
         time.sleep(3)
         self.__start_gameLoop()
@@ -82,85 +79,21 @@ class Game:
         isRunning = True
         while isRunning:
             # handle all events before doing anything else
-            isRunning = not self.__handle_events()
+            isRunning = not self._eventHandler.handle_events()
             # update the entities and render them
             self.world.tick()
-            # clear the screen to prepare for the next draw
-            self.screen.fill((0, 0, 0))
-            self.world.render()
-            self.renderScores()
-            # update the display
-            pygame.display.flip()
+            self._renderManager.render(self.world.get_allObjects(), self.world.get_playerScores())
             # sleep for a period of time determined by our loop rate
             time.sleep(loopRate)
         # quit the game
         self.__quit_game()
-            
-    def __handle_events(self):
-        """handles all of the events sent by pygame, and returns a bool corresponding to if QUIT is one of the event types"""
-        # if we had a quit event
-        hasQuitEvent = False
-        # for each event, handle it appropriately
-        for event in pygame.event.get():
-            # check if it's a quit event
-            if event.type == pygame.QUIT:
-                hasQuitEvent = True
-            elif event.type == pygame.JOYBUTTONDOWN or event.type == pygame.JOYBUTTONUP or event.type == pygame.JOYAXISMOTION:
-                self.__handle_gamePadEvent(event)
-        
-        # return if the game should continue running
-        return hasQuitEvent
     
-    def __handle_gamePadEvent(self, event):
-        """handles the input event for a gamepad"""
-        # get the gamepad associated with the event
-        gamepadNumber = event.joy
-        gamepad = self.components['gamepads'][gamepadNumber]
-        if event.type == pygame.JOYBUTTONDOWN:
-            # dispatch the event associated with that button
-            gamepad.press_button(event.button)
-        elif event.type == pygame.JOYBUTTONUP:
-            # call the release function for that button
-            gamepad.release_button(event.button)
-        elif event.type == pygame.JOYAXISMOTION:
-            # call the directional button press on the gamepad
-            gamepad.press_directionalButton(event.axis, event.value)
-        
-    def __addPlayerToGame(self, gamepad):
-        """creates a player and binds the button inputs of the gamepad to actions the player can take"""
-        # the player number, used to determine where to place the player
-        playerNumber = gamepad.get_controllerNumber()
-        player = self.world.create_player(playerNumber, posX = (20 if playerNumber == 0 else 470), posY = 200)
-        # map the directional buttons to move the player
-        gamepad.map_directionalButton(controllers.SNESAxes.VERTICAL, lambda: player.set_velocity(player.velX, player.get_speed()['y']), lambda: player.set_velocity(player.velX, -player.get_speed()['y']), lambda: player.set_velocity(player.velX, 0))
-        return player
-        
-    def __addPlayersForEachGamePad(self, gamepads):
-        # the list of players
-        players = [self.__addPlayerToGame(gamepad) for gamepad in gamepads]
-        return players
-    
-    def score(self, ball):
-        """
-            changes the score of the player that scored, based on the ball's owner
-        """
-        # if the ball was <= 0, then the score being changed is player 2's else it's player 1's
-        affectedPlayer = self.players[1] if ball.posX <= 10 else self.players[0]
-        # if the score was an own goal
-        isOwnGoal = (ball.owner == affectedPlayer)
-        # if the one scored against owned the ball, then they lose a point, else the other player gains a point
-        if isOwnGoal:
-            ball.owner.score -= 1
-            affectedPlayer.score += 1
-        else:
-            affectedPlayer.score += 1
-        
-        # reset the ball's position
-        ball.set_location(250, 250)
-        ball.switch_owner(None)
-        ball.launch()
-        
-    def renderScores(self):
-        """renders the scores of each player on the screen"""
-        player1ScoreSurface = self.gameFont.render("{} | {}".format(self.players[0].score, self.players[1].score), False, (255, 255, 255))
-        self.screen.blit(player1ScoreSurface, (220, 30))
+    def __initPlayersAndBall(self):
+         # add the players
+        self.world.add_player(self._componentManager.get_controller(0))
+        self.world.add_player(self._componentManager.get_controller(1))
+        # add the ball
+        ball = world.Ball(self.world.get_players(), game = None)
+        self.world.add_entity(ball)
+        self.world.set_ball(ball)
+  

@@ -141,7 +141,7 @@ class Player(Entity):
         # the array of colors to use that corresponds to the player number
         playerColors = [(255, 0, 50), (50, 0, 255)]
         self.playerNumber = playerNumber
-        Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 5)
+        Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 7)
         # the player's score
         self.score = 0
         
@@ -150,11 +150,9 @@ class Ball(Entity):
         Entity.__init__(self, 250, 250, 10, 10, (255, 255, 255), 3, 3)
         # currenly no owner
         self.owner = 'none'
-        self.velX = 3
-        self.velY = 3
         # the list of players this ball has to use in order to bounce off of them
         self.__players = players
-        self.game = game
+
         
     def switch_owner(self, player = None):
         # set the color of the ball
@@ -169,8 +167,8 @@ class Ball(Entity):
         # clamp the locations in
         axesOutsideWorld = self.is_outsideWorld(newX, newY)
         if axesOutsideWorld['x']:
-            # check if it's behind its owner, if yes, then decrement the owner's score for an own-goal. if not, increment it for scoring a goal
-            self.game.score(self)
+            # a goal has been scored! post an event to pygame for our event handler to pick up
+            pygame.event.post(pygame.event.Event(pygame.USEREVENT, custom_type = 64, ball = self, position = newX))
         if axesOutsideWorld['y']:
             self.__bounce(axis = 'y')
         
@@ -207,21 +205,22 @@ class Ball(Entity):
     def launch(self):
         """chooses a random velocity for the x and y axes to launch the ball at"""
         # the minimum speed for the ball
-        minSpeed = 3
+        minXSpeed = 3
+        minYSpeed = 1
         # get a random speed for the ball's x and y axes
         spdX = random.randint(-5, 5)
-        spdY = random.randint(-4, 4)
+        spdY = random.randint(-3, 3)
         # make sure spdX and spdY aren't really slow or 0
         if spdX < 0:
-            spdX = min(spdX, -minSpeed)
+            spdX = min(spdX, -minXSpeed)
         else:
-            spdX = max(spdX, minSpeed)
+            spdX = max(spdX, minXSpeed)
             
         if spdY < 0:
-            spdY = min(spdY, -minSpeed)
+            spdY = min(spdY, -minYSpeed)
         else:
-            spdY = max(spdY, minSpeed)
+            spdY = max(spdY, minYSpeed)
         # pause for a moment to let the player's get their thoughts in order
         time.sleep(1)
         # set our velocities to spdX and spdY
-        self.velX, velY = spdX, spdY
+        self.velX, self.velY = spdX, spdY
