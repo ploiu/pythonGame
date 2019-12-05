@@ -56,6 +56,10 @@ class WorldObject:
         # update our hitbox to reflect the changes
         self.__updateHitBox()
         
+    def update(self):
+        """called whenever the world object needs to have its state updated"""
+        pass
+        
 class Entity(WorldObject):
     """An entity is a type of world object that can move, and has an update method to update its state on every game loop"""
     def __init__(self, posX, posY, width, height, color, spdX, spdY):
@@ -144,6 +148,29 @@ class Player(Entity):
         Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 7)
         # the player's score
         self.score = 0
+        # the list of powerUps the player has
+        self.powerUps = []
+        
+    def use_powerUp(self, powerUpId):
+        # get the powerUp associated with the id
+        foundPowerupIndex = self._get_firstIndexForPowerUp(powerUpId)
+        if foundPowerupIndex > -1:
+            # call the function in the powerUp
+            self.powerUps[foundPowerupIndex]['action']()
+            # remove the powerUp from the player
+            del self.powerUps[foundPowerupIndex]
+        
+    def _get_firstIndexForPowerUp(self, powerUpId):
+        return next((index for index,powerUp in enumerate(self.powerUps) if powerUp['id'] == powerUpId), -1)
+    
+    def add_powerUp(self, powerUpItem):
+        """adds the passed powerUpItem to our powerUp list. Since the max amount of powerUps a player can have is 4, the oldest powerUp is removed if the player already has 4"""
+        # only can have 4 powerUps, so make sure that we remove the oldest one if we already have 4
+        if len(self.powerUps) == 4:
+            del self.powerUps[0]
+        # add the powerUpItem to the list
+        self.powerUps.append(powerUpItem)
+        
         
 class Ball(Entity):
     def __init__(self, players, game):
