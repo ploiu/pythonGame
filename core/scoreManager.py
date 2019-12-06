@@ -6,16 +6,20 @@ class ScoreManager:
         """
             changes the score of the player that scored, based on the ball's owner
         """
-        # if the ball was <= 0, then the score being changed is player 2's else it's player 1's
-        affectedPlayer = self.__players[1] if ball.posX <= 10 else self.__players[0]
+        print('goal')
+        print(ball.owner)
+        # The player that gets the point
+        scoringPlayer = self.__players[1] if ball.posX <= 10 else self.__players[0]
+        # the player scored against
+        otherPlayer = self.__players[1] if ball.posX > 10 else self.__players[0]
+        print(scoringPlayer)
         # if the score was an own goal
-        isOwnGoal = (ball.owner == affectedPlayer)
-        # if the one scored against owned the ball, then they lose a point, else the other player gains a point
+        isOwnGoal = (ball.owner == otherPlayer)
+        # if the one scored against owned the ball, then they lose a point as well as the scoring player getting a point
         if isOwnGoal:
-            ball.owner.score -= 1
-            affectedPlayer.score += 1
-        else:
-            affectedPlayer.score += 1
+            otherPlayer.score -= 1
+        
+        scoringPlayer.score += 1
         
         # reset the ball's position
         ball.set_location(250, 250)

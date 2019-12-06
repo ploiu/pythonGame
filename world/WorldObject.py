@@ -152,6 +152,7 @@ class Player(Entity):
         self.powerUps = []
         
     def use_powerUp(self, powerUpId):
+        """calls the function on one of our powerUps that has the passed powerUpId. If no matching powerUp is found, nothing will happen"""
         # get the powerUp associated with the id
         foundPowerupIndex = self._get_firstIndexForPowerUp(powerUpId)
         if foundPowerupIndex > -1:
@@ -161,6 +162,7 @@ class Player(Entity):
             del self.powerUps[foundPowerupIndex]
         
     def _get_firstIndexForPowerUp(self, powerUpId):
+        """gets the first index of a powerUp with the passed powerUpId, or -1 if no matching powerUp exists"""
         return next((index for index,powerUp in enumerate(self.powerUps) if powerUp['id'] == powerUpId), -1)
     
     def add_powerUp(self, powerUpItem):
@@ -171,9 +173,12 @@ class Player(Entity):
         # add the powerUpItem to the list
         self.powerUps.append(powerUpItem)
         
+    def get_powerUps(self):
+        return self.powerUps
+        
         
 class Ball(Entity):
-    def __init__(self, players, game):
+    def __init__(self, players):
         Entity.__init__(self, 250, 250, 10, 10, (255, 255, 255), 3, 3)
         # currenly no owner
         self.owner = 'none'
@@ -184,7 +189,7 @@ class Ball(Entity):
     def switch_owner(self, player = None):
         # set the color of the ball
         self.color = (255, 255, 255) if player is None else player.color
-        self.owner = 'none' if player is None else player.playerNumber
+        self.owner = 'none' if player is None else player
 
     def _update_location(self):
         # the new x location this entity should be at

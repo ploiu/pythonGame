@@ -2,12 +2,12 @@ import world, enum
 
 class PowerUp(world.WorldObject):
     def __init__(self, posX, posY, color, ball, players):
-        world.WorldObject.__init__(self, posX, posY, 12, 12, color)
+        world.WorldObject.__init__(self, posX, posY, 20, 20, color)
         # needed during initialization time because we can't easily get it later
         self._ball = ball
         self._players = players
         # the amount of time the powerUp has to live
-        self.life = 20
+        self.life = 520
         
     def _perform_action(self):
         """function to be called when a player uses this powerUp"""
@@ -19,17 +19,19 @@ class PowerUp(world.WorldObject):
     
     def get_ItemForm(self):
         """returns a dict, with the key being the id of the powerUp, and the value being this powerUp''s action"""
-        return {self._get_powerUpId(): (lambda: self._perform_action())}
+        return {self._get_powerUpId(): (lambda: self._perform_action()), 'color': self.color}
     
     def update(self):
         world.WorldObject.update(self)
         # decrease the amount of time the powerUp has left
         self.life -= 1
         # if the powerUp has been hit by the ball and it's not dead, kill the powerUp and give it to the player
-        if self.life > 0 and self.hitbox.colliderect(self._ball.hitbox):
+        if self.life > 0 and self._ball.owner != 'none' and self.hitbox.colliderect(self._ball.hitbox):
             self.life = 0
             # get the ball's owner
             owner = self._ball.owner
+            owner.add_powerUp(self.get_ItemForm())
+            
         
     
 class SpeedBallPowerUp(PowerUp):

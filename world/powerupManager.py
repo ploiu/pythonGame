@@ -6,7 +6,7 @@ class PowerUpManager:
         self._ball = ball
         self._players = players
         # time until next attempt to spanw a powerUp takes place
-        self.__DEFAULT_POWERUP_TIMER = 15
+        self.__DEFAULT_POWERUP_TIMER = 20
         self._timeUntilNextPowerUp = self.__DEFAULT_POWERUP_TIMER
         # only 1 powerUp can exist in the world at a time
         self.powerUp = None
@@ -18,31 +18,34 @@ class PowerUpManager:
     def _create_powerUp(self):
         """creates a random powerUp in the world at a random (but constrained) location"""
         # the max distance from the center that the powerUp can spawn from
-        maxDistance = 20
+        maxDistanceX = 30
+        maxDistanceY = 100
         # the x spawn location
-        spawnX = random.randint(-maxDistance, maxDistance)
-        spawnY = random.randint(-maxDistance, maxDistance)
+        spawnX = random.randint(-maxDistanceX, maxDistanceX)
+        spawnY = random.randint(-maxDistanceY, maxDistanceY)
         # the powerUp id to spawn in TODO change when we get more powerUps
         powerUpType = random.randint(0, 0)
         # the powerUp to spawn in
-        powerUpToSpawn = self._powerUpMapping[powerUpType](spawnX, spawnY, self._ball, self._players)
+        powerUpToSpawn = self._powerUpMapping[powerUpType](250 + spawnX, 250 + spawnY, self._ball, self._players)
         self.powerUp = powerUpToSpawn
     
     def tick(self):
         """called periodically in the game loop, used to check for powerUp status and spawn in new powerUps / remove expired ones from the world"""
-        # if there's already a powerup, don't change the timer
-        if self.powerup is None:
+        # if there's already a powerUp, don't change the timer
+        if self.powerUp is None:
             self._timeUntilNextPowerUp -= 1
             if self._timeUntilNextPowerUp <= 0:
-                # reset the timer and attempt to spawn a powerup
+                # reset the timer and attempt to spawn a powerUp
                 self._timeUntilNextPowerUp = self.__DEFAULT_POWERUP_TIMER
                 self._attempt_spawnPowerup()
-        elif self.powerup.life <= 0:
-            # set our powerup to be none
-            self.powerup = None
+        elif self.powerUp.life <= 0:
+            # set our powerUp to be none
+            self.powerUp = None
+        else:
+            self.powerUp.update()
             
     def _attempt_spawnPowerup(self):
         # if we don't have a powerUp, attempt to generate one
-        if self.powerUp is None and random.randint(0, 255) == 69:
+        if self.powerUp is None and random.randint(0, 50) == 42:
             # create a powerUp
-            self.create_powerUp()
+            self._create_powerUp()

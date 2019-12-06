@@ -29,7 +29,7 @@ class Game:
         # initialize the world for the game
         self.world = world.World()
         # initialize the players and the ball
-        self.__initPlayersAndBall()
+        self.__finish_worldSetup()
         # init our event handler with the score handler and stuff
         controllers = self._componentManager.get_controllers()
         self._eventHandler = core.EventHandler(controllers, core.ScoreManager(self.world.get_players()))
@@ -60,7 +60,7 @@ class Game:
             
         # render everything for a first tick
         self.world.tick()
-        self._renderManager.render(self.world.get_allObjects(), self.world.get_playerScores())
+        self._renderManager.render(self.world.get_allObjects(), self.world.get_playerScores(), self.world.get_playerPowerUps())
         # launch the ball
         self.world.get_ball().launch()
         self.__start_gameLoop()
@@ -81,18 +81,17 @@ class Game:
             isRunning = not self._eventHandler.handle_events()
             # update the entities and render them
             self.world.tick()
-            self._renderManager.render(self.world.get_allObjects(), self.world.get_playerScores())
+            self._renderManager.render(self.world.get_allObjects(), self.world.get_playerScores(), self.world.get_playerPowerUps())
             # sleep for a period of time determined by our loop rate
             time.sleep(loopRate)
         # quit the game
         self.__quit_game()
     
-    def __initPlayersAndBall(self):
+    def __finish_worldSetup(self):
          # add the players
         self.world.add_player(self._componentManager.get_controller(0))
         self.world.add_player(self._componentManager.get_controller(1))
         # add the ball
-        ball = world.Ball(self.world.get_players(), game = None)
-        self.world.add_entity(ball)
-        self.world.set_ball(ball)
-  
+        self.world.init_ball()
+        # init the powerUpManager for the world
+        self.world.init_powerUpManager()
