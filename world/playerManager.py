@@ -13,6 +13,14 @@ class PlayerManager:
         player = self._create_player(playerNumber, posX = (20 if playerNumber == 0 else 470), posY = 200)
         # map the directional buttons to move the player
         gamepad.map_directionalButton(controllers.SNESAxes.VERTICAL, lambda: player.set_velocity(player.velX, player.get_speed()['y']), lambda: player.set_velocity(player.velX, -player.get_speed()['y']), lambda: player.set_velocity(player.velX, 0))
+        # blue powerup
+        gamepad.map_button(controllers.SNESButtons.X, lambda: player.use_powerUp(0))
+        # yellow powerup
+        gamepad.map_button(controllers.SNESButtons.B, lambda: player.use_powerUp(1))
+        # green powerup
+        gamepad.map_button(controllers.SNESButtons.A, lambda: player.use_powerUp(2))
+        # red powerup
+        gamepad.map_button(controllers.SNESButtons.Y, lambda: player.use_powerUp(3))
     
     def _create_player(self, playerNumber, posX = 0, posY = 0):
         """creates a player, registers it to the world, and returns it"""

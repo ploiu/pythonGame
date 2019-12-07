@@ -11,7 +11,10 @@ class PowerUpManager:
         # only 1 powerUp can exist in the world at a time
         self.powerUp = None
         self._powerUpMapping = {
-                0: world.SpeedBallPowerUp
+                0: world.SpeedBallPowerUp,
+                1: world.OwnerSwitchPowerUp,
+                2: world.SwitchDirectionPowerUp,
+                3: world.BallSizePowerUp
             }
         """a dict containing powerUp IDs and the powerUp they''re associated with, used to instantiate the corresponding powerUp when it comes to place one in the world"""
         
@@ -24,7 +27,7 @@ class PowerUpManager:
         spawnX = random.randint(-maxDistanceX, maxDistanceX)
         spawnY = random.randint(-maxDistanceY, maxDistanceY)
         # the powerUp id to spawn in TODO change when we get more powerUps
-        powerUpType = random.randint(0, 0)
+        powerUpType = random.randint(0, len(self._powerUpMapping) - 1)
         # the powerUp to spawn in
         powerUpToSpawn = self._powerUpMapping[powerUpType](250 + spawnX, 250 + spawnY, self._ball, self._players)
         self.powerUp = powerUpToSpawn
@@ -46,6 +49,6 @@ class PowerUpManager:
             
     def _attempt_spawnPowerup(self):
         # if we don't have a powerUp, attempt to generate one
-        if self.powerUp is None and random.randint(0, 50) == 42:
+        if self.powerUp is None and random.randint(0, 10) == 1:
             # create a powerUp
             self._create_powerUp()

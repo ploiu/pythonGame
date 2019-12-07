@@ -237,8 +237,9 @@ class Ball(Entity):
     def launch(self):
         """chooses a random velocity for the x and y axes to launch the ball at"""
         # the minimum speed for the ball
-        minXSpeed = 3
+        minXSpeed = 4
         minYSpeed = 1
+        self.set_size(10, 10)
         # get a random speed for the ball's x and y axes
         spdX = random.randint(-5, 5)
         spdY = random.randint(-3, 3)

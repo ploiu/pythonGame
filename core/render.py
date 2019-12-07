@@ -58,6 +58,6 @@ class RenderManager:
     def _render_playerPowerUps(self, powerUps, startX, startY):
         """renders the list of powerUps on the screen in a row, each powerUp rendered in its color"""
         # diameter to render each powerUp
-        powerUpRadius = 3
+        powerUpRadius = 4
         for index,powerUp in enumerate(powerUps):
-            pygame.draw.circle(self.screen, powerUp['color'], (startX + powerUpRadius * index, startY), powerUpRadius)
+            pygame.draw.circle(self.screen, powerUp['color'], (startX + (powerUpRadius * index * 2) + powerUpRadius // 2, startY), powerUpRadius)

@@ -1,4 +1,4 @@
-import world, enum
+import world, enum, random
 
 class PowerUp(world.WorldObject):
     def __init__(self, posX, posY, color, ball, players):
@@ -7,7 +7,7 @@ class PowerUp(world.WorldObject):
         self._ball = ball
         self._players = players
         # the amount of time the powerUp has to live
-        self.life = 520
+        self.life = 540
         
     def _perform_action(self):
         """function to be called when a player uses this powerUp"""
@@ -19,7 +19,7 @@ class PowerUp(world.WorldObject):
     
     def get_ItemForm(self):
         """returns a dict, with the key being the id of the powerUp, and the value being this powerUp''s action"""
-        return {self._get_powerUpId(): (lambda: self._perform_action()), 'color': self.color}
+        return {'id': self._get_powerUpId(), 'action': (lambda: self._perform_action()), 'color': self.color}
     
     def update(self):
         world.WorldObject.update(self)
@@ -39,8 +39,50 @@ class SpeedBallPowerUp(PowerUp):
         PowerUp.__init__(self, posX, posY, (0, 30, 232), ball, players)
     
     def _perform_action(self):
-        self._ball.velX *= 2
-        self._ball.velY *= 2
+        # the random bonus to be applied to one of the axes
+        randomXBonus = random.randint(0, 3)
+        randomYBonus = random.randint(0, 3)
+        self._ball.velX *= (3 + randomXBonus)
+        self._ball.velY *= (3 + randomYBonus)
     
     def _get_powerUpId(self):
         return 0
+    
+class OwnerSwitchPowerUp(PowerUp):
+    def __init__(self, posX, posY, ball, players):
+        PowerUp.__init__(self, posX, posY, (200, 170, 0), ball, players)
+        
+    def _perform_action(self):
+        # make the ball switch teams
+        otherPlayer = next((player for index,player in enumerate(self._players) if player != self._ball.owner), None)
+        # if there is another player, change the ball's owner to that
+        if otherPlayer is not None:
+            print(otherPlayer)
+            self._ball.switch_owner(otherPlayer)
+        
+    def _get_powerUpId(self):
+        return 1
+    
+class SwitchDirectionPowerUp(PowerUp):
+    def __init__(self, posX, posY, ball, players):
+        PowerUp.__init__(self, posX, posY, (230, 0, 20), ball, players)
+        
+    def _perform_action(self):
+        # get the ball's initial velocity
+        ballVelocity = self._ball.get_velocity()
+        self._ball.set_velocity(-ballVelocity['x'], -ballVelocity['y'])
+        
+    def _get_powerUpId(self):
+        return 2
+    
+class BallSizePowerUp(PowerUp):
+    def __init__(self, posX, posY, ball, players):
+        PowerUp.__init__(self, posX, posY, (0, 200, 50), ball, players)
+        
+    def _perform_action(self):
+        # get the ball's initial velocity
+        ballSize = random.randint(1, 80)
+        self._ball.set_size(ballSize, ballSize)
+        
+    def _get_powerUpId(self):
+        return 3
