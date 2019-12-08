@@ -14,7 +14,9 @@ class PowerUpManager:
                 0: world.SpeedBallPowerUp,
                 1: world.OwnerSwitchPowerUp,
                 2: world.SwitchDirectionPowerUp,
-                3: world.BallSizePowerUp
+                3: world.BallSizePowerUp,
+                4: world.RandomizeLocationPowerUp,
+                5: world.BounceBallPowerUp
             }
         """a dict containing powerUp IDs and the powerUp they''re associated with, used to instantiate the corresponding powerUp when it comes to place one in the world"""
         

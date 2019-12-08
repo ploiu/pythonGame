@@ -21,6 +21,10 @@ class PlayerManager:
         gamepad.map_button(controllers.SNESButtons.A, lambda: player.use_powerUp(2))
         # red powerup
         gamepad.map_button(controllers.SNESButtons.Y, lambda: player.use_powerUp(3))
+        # orange powerup
+        gamepad.map_button(controllers.SNESButtons.LBUMPER, lambda: player.use_powerUp(4))
+        # purple powerup
+        gamepad.map_button(controllers.SNESButtons.RBUMPER, lambda: player.use_powerUp(5))
     
     def _create_player(self, playerNumber, posX = 0, posY = 0):
         """creates a player, registers it to the world, and returns it"""

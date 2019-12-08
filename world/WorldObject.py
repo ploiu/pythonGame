@@ -202,14 +202,14 @@ class Ball(Entity):
             # a goal has been scored! post an event to pygame for our event handler to pick up
             pygame.event.post(pygame.event.Event(pygame.USEREVENT, custom_type = 64, ball = self, position = newX))
         if axesOutsideWorld['y']:
-            self.__bounce(axis = 'y')
+            self.bounce(axis = 'y')
         
         # for each player, if this ball intersects with it, bounce the ball and change its owner
         for player in self.__players:
             if self.hitbox.colliderect(player.hitbox):
                 # change the owner and bounce the ball on both axes
                 self.switch_owner(player)
-                self.__bounce('x')
+                self.bounce('x')
                 # the amount to increase the ball's speed by
                 speedIncrease = random.randint(1, 2)
                 # if the player's y velocity was not 0, then change this ball's y velocity to match the player's
@@ -227,7 +227,7 @@ class Ball(Entity):
         # update the entity's location
         self._update_location()
         
-    def __bounce(self, axis = 'x', speedMult = 1.0):
+    def bounce(self, axis = 'x', speedMult = 1.0):
         """changes the velocity of the ball based on the passed axis"""
         if axis == 'x':
             self.set_velocity((-self.velX) * speedMult, self.velY)
