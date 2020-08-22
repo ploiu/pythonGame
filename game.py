@@ -73,7 +73,7 @@ class Game:
     def __start_gameLoop(self):
         """starts the loop that calls all the game's functions"""
         # the target fps count we want is related to how many times we update the display in a second
-        loopRate = 1 / 32
+        loopRate = 1 / 2
         # the variable that controls if the loop should keep going
         isRunning = True
         while isRunning:

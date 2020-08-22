@@ -7,7 +7,7 @@ class PowerUp(world.WorldObject):
         self._ball = ball
         self._players = players
         # the amount of time the powerUp has to live
-        self.life = 540
+        self.life = 3000
         
     def _perform_action(self, owningPlayer = None):
         """function to be called when a player uses this powerUp"""
@@ -113,3 +113,28 @@ class BounceBallPowerUp(PowerUp):
         
     def _get_powerUpId(self):
         return 5
+    
+class InvisiBallPowerUp(PowerUp):
+    def __init__(self, posX, posY, ball, players):
+        PowerUp.__init__(self, posX, posY, (255, 192, 203), ball, players)
+        
+    def _perform_action(self, owningPlayer = None):
+        # make the ball invisible
+        self._ball.set_color((0, 0, 0))
+        self._ball.isInvisible = True
+        
+    def _get_powerUpId(self):
+        return 6
+        
+class TeleportBallPowerUp(PowerUp):
+    def __init__(self, posX, posY, ball, players):
+        PowerUp.__init__(self, posX, posY, (100, 100, 100), ball, players)
+        
+    def _perform_action(self, owningPlayer = None):
+        x = random.randint(10, 490)
+        y = random.randint(10, 490)
+        self._ball.posX = x
+        self._ball.posY = y
+        
+    def _get_powerUpId(self):
+        return 7

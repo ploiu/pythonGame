@@ -145,7 +145,7 @@ class Player(Entity):
         # the array of colors to use that corresponds to the player number
         playerColors = [(255, 0, 50), (50, 0, 255)]
         self.playerNumber = playerNumber
-        Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 7)
+        Entity.__init__(self, posX, posY, 10, 120, playerColors[playerNumber], 5, 2)
         # the player's score
         self.score = 0
         # the list of powerUps the player has
@@ -179,11 +179,14 @@ class Player(Entity):
         
 class Ball(Entity):
     def __init__(self, players):
-        Entity.__init__(self, 250, 250, 10, 10, (255, 255, 255), 3, 3)
+        Entity.__init__(self, 250, 250, 10, 10, (255, 255, 255), 1, 1)
         # currenly no owner
         self.owner = 'none'
         # the list of players this ball has to use in order to bounce off of them
         self.__players = players
+        # ticks the ball should be invisible
+        self.__invisibleTicks = 0
+        self.isInvisible = False
 
         
     def switch_owner(self, player = None):
@@ -211,7 +214,7 @@ class Ball(Entity):
                 self.switch_owner(player)
                 self.bounce('x')
                 # the amount to increase the ball's speed by
-                speedIncrease = random.randint(1, 2)
+                speedIncrease = random.uniform(0, 0.5)
                 # if the player's y velocity was not 0, then change this ball's y velocity to match the player's
                 if player.velY != 0:
                     self.velY = math.copysign(self.velY, player.velY)
@@ -226,6 +229,15 @@ class Ball(Entity):
         """updates all necessary values of this entity, called within the game loop"""
         # update the entity's location
         self._update_location()
+        # if the ball is invisible, increase the ticks until it reaches 10
+        if self.isInvisible:
+            self.color = (0, 0, 0)
+            self.__invisibleTicks += 1
+            if self.__invisibleTicks >= 600:
+                self.__invisibleTicks = 0
+                self.isInvisible = False
+                self.switch_owner(None)
+                self.color = (255, 255, 255)
         
     def bounce(self, axis = 'x', speedMult = 1.0):
         """changes the velocity of the ball based on the passed axis"""
@@ -237,12 +249,12 @@ class Ball(Entity):
     def launch(self):
         """chooses a random velocity for the x and y axes to launch the ball at"""
         # the minimum speed for the ball
-        minXSpeed = 4
-        minYSpeed = 1
+        minXSpeed = 0.25
+        minYSpeed = 0.05
         self.set_size(10, 10)
         # get a random speed for the ball's x and y axes
-        spdX = random.randint(-5, 5)
-        spdY = random.randint(-3, 3)
+        spdX = random.uniform(-0.25, 0.25)
+        spdY = random.uniform(-0.25, 0.25)
         # make sure spdX and spdY aren't really slow or 0
         if spdX < 0:
             spdX = min(spdX, -minXSpeed)
